@@ -1,0 +1,157 @@
+// Montserrat
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  -webkit-tab-highlight-color: transparent;
+  user-select: none;
+  font-family: $font;
+}
+
+body {
+  #fp-nav {
+    z-index: unset;
+  }
+
+  #fp-nav ul li a.active span {
+    background: $bg-lang-active !important;
+    height: 7px !important;
+    width: 7px !important;
+    margin: 0;
+    &::before {
+      content: '';
+      width: 30px;
+      background: $bg-lang-active !important;
+      transition: width 0.5s;
+    }
+  }
+
+  #fp-nav ul li:hover a span {
+    background: $bg-lang-active !important;
+    width: 7px !important;
+    height: 7px !important;
+    margin: 0 !important;
+    &::before {
+      content: '';
+      width: 30px;
+      background: $bg-lang-active !important;
+      transition: width 0.5s;
+    }
+  }
+
+  #fp-nav ul li a span {
+    width: 7px;
+    height: 7px;
+    background: $black;
+    border-radius: 0 !important;
+
+    &.fp-sr-only {
+      display: none;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 0;
+      width: 7px;
+      height: 7px;
+      transition: width 0.5s;
+    }
+  }
+
+  &.fp-viewing-secondPage,
+  &.fp-viewing-thirdPage,
+  &.fp-viewing-fivePage {
+    #fp-nav ul li a span {
+      background: $white !important;
+    }
+    .logo {
+      color: $white !important;
+    }
+
+    .header_box_menu_mobile-tonggle {
+      span {
+        background: $white;
+      }
+
+      .active {
+        span {
+          background: $white;
+        }
+      }
+    }
+
+    .header_box_lang {
+      .lang {
+        color: $white;
+        &.active {
+          color: $bg-lang-active;
+        }
+      }
+    }
+  }
+
+  &.fp-viewing-secondPage,
+  &.fp-viewing-thirdPage,
+  &.fp-viewing-fivePage {
+    #fp-nav ul li:hover a span {
+      background: $bg-lang-active !important;
+    }
+  }
+
+  &.fp-viewing-secondPage,
+  &.fp-viewing-thirdPage,
+  &.fp-viewing-fivePage {
+    #fp-nav ul li a.active span {
+      background: $bg-lang-active !important;
+    }
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: $color-text;
+}
+
+ul {
+  list-style-type: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+video {
+  max-width: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
+.container {
+  width: 100%;
+  max-width: 70%;
+  margin: 0 auto;
+
+  @include tablet {
+    width: 90%;
+  }
+}
+
+.container-fluid {
+  width: 1860px;
+  margin: 0 auto;
+
+  @include laptop {
+    width: 1460px;
+  }
+}

@@ -1,0 +1,43 @@
+.roomCard {
+    width: 100px;
+    height: 150px;
+    border-radius: 15px;
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+
+    &__status {
+        svg {
+            color: white;
+        }
+    }
+    &__type {
+        color: white;
+        font-size: 15px;
+        font-weight: 400;
+    }
+    &__id {
+        color: white;
+        font-size: 20px;
+        font-weight: 600!important;
+    }
+}
+
+.bg-green {
+    background-color: #94d8f7;
+    border: 1px solid #94d8f7;
+
+    &:hover {
+        background-color: #b5dff1;
+    }
+}
+.bg-red {
+    background-color: #f77352;
+    border: 1px solid #f77352;
+    &:hover {
+        background-color: #e58186;
+    }
+}

@@ -1,0 +1,72 @@
+@mixin absoluteCenter($direction: 'left') {
+  position: absolute;
+
+  @if $direction == 'left' {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  @if $direction == 'top' {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  @if $direction == 'both' {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@mixin mobile-s {
+  @media only screen and (max-width: $mobile-s) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media only screen and (max-width: $mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media only screen and (max-width: $tablet) {
+    @content;
+  }
+}
+@mixin tablet-s {
+  @media only screen and (max-width: $tablet-s) {
+    @content;
+  }
+}
+
+@mixin large {
+  @media only screen and (max-width: $large) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media only screen and (max-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin laptop {
+  @media only screen and (max-width: $laptop) {
+    @content;
+  }
+}
+
+@mixin maxWidth($maxwidth) {
+  @media only screen and (max-width: $maxwidth) {
+    @content;
+  }
+}
+
+@mixin maxheight($maxheight) {
+  @media only screen and (max-height: $maxheight) {
+    @content;
+  }
+}

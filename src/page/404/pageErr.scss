@@ -1,0 +1,12 @@
+.err-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  font-size: 120px;
+  h2 {
+    margin: 0;
+  }
+}

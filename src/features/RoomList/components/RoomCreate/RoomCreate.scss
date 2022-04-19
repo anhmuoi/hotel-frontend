@@ -1,0 +1,37 @@
+.room {
+    &-create {
+        width: 80vw;
+        margin: 0 auto;
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        &-name {
+        }
+        &-location {
+        }
+        &-fix {
+        }
+        &-invest {
+        }
+        &-data {
+        }
+        &-dep {
+            &-icon {
+                display: flex;
+                align-items: center;
+
+            }
+            &-form {
+                display: flex;
+
+                gap: 20px;
+            }
+        }
+        .MuiFormControl-marginNormal {
+            margin-top: 0px!important;
+        }
+    }
+
+}

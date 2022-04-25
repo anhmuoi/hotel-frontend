@@ -2,7 +2,7 @@ import StorageKeys from '../constants/storage-key.js';
 const { default: axios } = require("axios");
 
 const axiosClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: 'http://lovedatingfriends.xyz/api',
   headers: {
     "Content-Type": "application/json",
   },

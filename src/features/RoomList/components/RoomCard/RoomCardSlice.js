@@ -5,13 +5,13 @@ import RoomApi from "../../../../api/RoomApi.js";
 export const getRoomList = createAsyncThunk('room/getAll', async (payload) => {
     //call api
     const data = await RoomApi.getAll(payload);
-
     return data;
 });
 
 const initialState = {
   RoomList: [],
-  pagination: {}
+  pagination: {},
+  total: 0,
 };
 
 const RoomSlice = createSlice({
@@ -43,6 +43,8 @@ const RoomSlice = createSlice({
         [getRoomList.fulfilled]: (state, action) => {
             state.RoomList = action.payload.data;
             state.pagination = action.payload.pagination;
+            state.total = action.payload.total;
+
         },
     },
 });

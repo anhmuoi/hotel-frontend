@@ -3,9 +3,9 @@ const { default: axios } = require("axios");
 
 const axiosClient = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
-  // headers: {
-  //   "Content-Type": "application/json",
-  // },
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // Add a request interceptor
@@ -60,7 +60,7 @@ axiosClient.interceptors.response.use(
     
     // }
 
-    return Promise.reject(error);
+    return Promise.reject(error.response.data);
   }
 );
 

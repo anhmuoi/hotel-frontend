@@ -1,26 +1,22 @@
-import { Box, Button, Collapse, IconButton, Pagination, Typography } from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { Box, Button, Collapse, IconButton, Typography } from '@mui/material';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import * as React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { formatPrice } from '../../Utils/common.js';
-import './OrderManager.scss';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import RoomApi from '../../api/RoomApi.js';
-import storageKeys from '../../constants/storage-key.js';
-import { useHistory } from 'react-router-dom';
-import orderApi from '../../api/orderApi.js';
-import { getRoomOrderList } from '../../features/RoomOrderList/components/RoomOrderCard/RoomOrderSlice.js';
-import { unwrapResult } from '@reduxjs/toolkit';
-import { formatDateTime } from '../../Utils/common.js';
 import { useSnackbar } from 'notistack';
+import * as React from 'react';
+import { useDispatch } from 'react-redux';
+import { useHistory, useRouteMatch } from 'react-router-dom';
+import orderApi from '../../../api/orderApi.js';
+import storageKeys from '../../../constants/storage-key.js';
+import { formatDateTime, formatPrice } from '../../../Utils/common.js';
+import useClock from '../../../Utils/useLock.jsx';
+import './DashBoardDetail.scss';
 
 function createData(
     customer,
@@ -102,24 +98,7 @@ function Row(props) {
                 <TableCell align="center">{row.room_id}</TableCell>
                 <TableCell align="center">{row.customer}</TableCell>
                 <TableCell align="center">{row.type}</TableCell>
-                <TableCell width={200} align="center">
-                    <Button
-                        onClick={() => handleClickUpdate()}
-                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
-                        color="success"
-                        variant="outlined"
-                    >
-                        Update
-                    </Button>
-                    <Button
-                        onClick={() => handleClickRemove()}
-                        color="error"
-                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
-                        variant="outlined"
-                    >
-                        Remove
-                    </Button>
-                </TableCell>
+                <TableCell width={200} align="center"></TableCell>
             </TableRow>
             <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -206,51 +185,92 @@ function Row(props) {
     );
 }
 
-export default function OrderManager() {
+export default function DashBoardDetail() {
     const [page, setPage] = React.useState(0);
-    const RoomOrderList = useSelector((state) => state.order);
+    const history = useHistory();
+    const timeString = useClock();
+
+    const {
+        params: { roomId },
+        url,
+    } = useRouteMatch();
+
+    const [RoomOrderList, setRoomOrderList] = React.useState([]);
 
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
+    React.useEffect(() => {
+        (async () => {
+            if (roomId) {
+                const orderByRoom = await orderApi.getOrderListByRoom({
+                    room_id: roomId,
+                });
+                const orderList = orderByRoom.data.data;
+
+                if (orderList) {
+                    orderList.map((order, index) => {
+                        if (order.in_reality && order.out_reality) {
+                            if (
+                                new Date(order.in_reality).getTime() < new Date(timeString).getTime() &&
+                                new Date(order.out_reality).getTime() >= new Date(timeString).getTime()
+                            ) {
+                                orderList[index].status = 'running';
+                            }
+                        } else if (order.in_reality && order.out_expected && order.out_reality !== null) {
+                            if (
+                                new Date(order.in_reality).getTime() <= new Date(timeString).getTime() &&
+                                new Date(order.out_expected).getTime() <= new Date(timeString).getTime()
+                            ) {
+                                orderList[index].status = 'running';
+                            }
+                        } else if (order.in_expected && order.out_expected) {
+                            if (
+                                new Date(order.in_expected).getTime() >= new Date(timeString).getTime() &&
+                                new Date(order.out_expected).getTime() >= new Date(timeString).getTime()
+                            ) {
+                                orderList[index].status = 'booked';
+                            } else {
+                                orderList.splice(index, 1);
+                            }
+                        }
+                    });
+                }
+                setRoomOrderList(orderList);
+            }
+        })();
+    }, [timeString === undefined]);
+
     const rows = [];
-    for (let i = 0; i < RoomOrderList.RoomOrderList?.length; i++) {
+    for (let i = 0; i < RoomOrderList?.length; i++) {
         rows.push(
             createData(
-                RoomOrderList.RoomOrderList[i].customer,
-                RoomOrderList.RoomOrderList[i].sale,
-                RoomOrderList.RoomOrderList[i].room_id,
-                RoomOrderList.RoomOrderList[i].total_price,
+                RoomOrderList[i].customer,
+                RoomOrderList[i].sale,
+                RoomOrderList[i].room_id,
+                RoomOrderList[i].total_price,
                 // formatPrice(RoomOrderList.RoomOrderList[i].fixed_price),
-                RoomOrderList.RoomOrderList[i].additional_price,
-                RoomOrderList.RoomOrderList[i].phone_customer,
-                RoomOrderList.RoomOrderList[i].created_at,
-                RoomOrderList.RoomOrderList[i].data,
-                RoomOrderList.RoomOrderList[i].id,
-                RoomOrderList.RoomOrderList[i].type_booking,
-                RoomOrderList.RoomOrderList[i].in_expected,
-                RoomOrderList.RoomOrderList[i].out_expected,
-                RoomOrderList.RoomOrderList[i].in_reality,
-                RoomOrderList.RoomOrderList[i].out_reality,
-                RoomOrderList.RoomOrderList[i].type
+                RoomOrderList[i].additional_price,
+                RoomOrderList[i].phone_customer,
+                RoomOrderList[i].created_at,
+                RoomOrderList[i].data,
+                RoomOrderList[i].id,
+                RoomOrderList[i].type_booking,
+                RoomOrderList[i].in_expected,
+                RoomOrderList[i].out_expected,
+                RoomOrderList[i].in_reality,
+                RoomOrderList[i].out_reality,
+                RoomOrderList[i].type
             )
         );
     }
 
-    React.useEffect(() => {
-        setRowsPerPage(RoomOrderList.pagination.limit);
-    }, [RoomOrderList.pagination.limit]);
-
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
-
     return (
-        <>
+        <div className="dashboard-detail">
+            <Button onClick={() => history.push(`/order-manager/create/${roomId}`)} variant="outlined">
+                New order +
+            </Button>
+            <Typography> những order trong room id: {roomId} đang chờ hoặc đang sử dụng</Typography>
+
             <TableContainer component={Paper}>
                 <Table aria-label="collapsible table">
                     <TableHead>
@@ -271,6 +291,6 @@ export default function OrderManager() {
                     </TableBody>
                 </Table>
             </TableContainer>
-        </>
+        </div>
     );
 }

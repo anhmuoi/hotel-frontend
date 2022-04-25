@@ -18,10 +18,8 @@ function Login(props) {
             const action = login(values);
 
             const resultAction = await dispatch(action);
-            console.log(resultAction);
 
             const user = unwrapResult(resultAction);
-            //   console.log('new user',user);
 
             // redirect to home page
             history.push('/');
@@ -32,7 +30,6 @@ function Login(props) {
             }
         } catch (error) {
             enqueueSnackbar(error.message, { variant: 'error' });
-            //  console.log('error',error);
         }
     };
 

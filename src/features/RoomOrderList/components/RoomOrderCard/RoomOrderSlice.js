@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import orderApi from '../../../../api/orderApi.js';
 
 export const getRoomOrderList = createAsyncThunk('roomOrder/getAll', async (payload) => {
-  console.log('payload', payload);
     //call api
     const data = await orderApi.getAll(payload);
 
@@ -11,7 +10,8 @@ export const getRoomOrderList = createAsyncThunk('roomOrder/getAll', async (payl
 
 const initialState = {
   RoomOrderList: [],
-  pagination: {}
+  pagination: {},
+  total: 0,
 };
 
 const RoomSlice = createSlice({
@@ -42,7 +42,8 @@ const RoomSlice = createSlice({
   extraReducers: {
         [getRoomOrderList.fulfilled]: (state, action) => {
           state.RoomOrderList = action.payload.data;
-            state.pagination = action.payload.pagination;
+          state.pagination = action.payload.pagination;
+          state.total = action.payload.total;
         },
     },
 });

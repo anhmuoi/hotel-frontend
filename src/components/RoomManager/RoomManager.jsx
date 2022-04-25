@@ -17,8 +17,12 @@ import RoomApi from '../../api/RoomApi.js';
 import storageKeys from '../../constants/storage-key.js';
 import { useHistory } from 'react-router-dom';
 import { getRoomList } from '../../features/RoomList/components/RoomCard/RoomCardSlice.js';
+import { useSnackbar } from 'notistack';
 
-function createData(name, location, priceMonth, priceInvestDate, DepreciationTime, created_at, data, id) {
+function createData(name, location, priceMonth, priceInvestDate, DepreciationTime, created_at, id) {
+    if (typeof DepreciationTime === 'string' || DepreciationTime instanceof String) {
+        DepreciationTime = JSON.parse(DepreciationTime);
+    }
     return {
         name,
         location,
@@ -29,7 +33,6 @@ function createData(name, location, priceMonth, priceInvestDate, DepreciationTim
             {
                 created_at: created_at,
                 DepreciationTime: DepreciationTime,
-                data: data,
             },
         ],
     };
@@ -40,6 +43,7 @@ function Row(props) {
     const [open, setOpen] = React.useState(false);
     const history = useHistory();
     const dispatch = useDispatch();
+    const { enqueueSnackbar } = useSnackbar();
 
     // get userId in localstorage
     const userId = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
@@ -50,7 +54,7 @@ function Row(props) {
             const action = getRoomList({ page: 1, limit: 10 });
             const resultAction = await dispatch(action);
         } catch (error) {
-            console.log('fail to remove room ', error.message);
+            enqueueSnackbar(error.message, { variant: 'error' });
         }
     };
     const handleClickUpdate = () => {
@@ -74,10 +78,20 @@ function Row(props) {
                 <TableCell align="center">{row.priceMonth}</TableCell>
                 <TableCell align="center">{row.priceInvestDate}</TableCell>
                 <TableCell width={200} align="center">
-                    <Button onClick={() => handleClickUpdate()} color="success" variant="outlined">
+                    <Button
+                        onClick={() => handleClickUpdate()}
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        color="success"
+                        variant="outlined"
+                    >
                         Update
                     </Button>
-                    <Button onClick={() => handleClickRemove()} color="error" variant="outlined">
+                    <Button
+                        onClick={() => handleClickRemove()}
+                        color="error"
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        variant="outlined"
+                    >
                         Remove
                     </Button>
                 </TableCell>
@@ -94,7 +108,6 @@ function Row(props) {
                                     <TableRow>
                                         <TableCell align="center">create_at</TableCell>
                                         <TableCell align="center">DepreciationTime</TableCell>
-                                        <TableCell align="center">data</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -103,8 +116,17 @@ function Row(props) {
                                             <TableCell align="center" component="th" scope="row">
                                                 {infoRow.created_at}
                                             </TableCell>
-                                            <TableCell align="center">{infoRow.DepreciationTime}</TableCell>
-                                            <TableCell align="center">{infoRow.data}</TableCell>
+                                            <TableCell align="center">
+                                                {((infoRow?.DepreciationTime && infoRow.DepreciationTime[0]?.length !== 0) ||
+                                                    (infoRow.DepreciationTime[0]?.length === 0 && infoRow.DepreciationTime?.length !== 1)) &&
+                                                    infoRow.DepreciationTime.map((item, index) => (
+                                                        <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <p>{item?.info}: &nbsp;</p>
+
+                                                            <span>{formatPrice(item?.price)}</span>
+                                                        </div>
+                                                    ))}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -122,7 +144,6 @@ export default function RoomManager() {
     const roomList = useSelector((state) => state.room);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-    console.log(roomList.RoomList, 'sdfhj');
     const rows = [];
     for (let i = 0; i < roomList.RoomList?.length; i++) {
         rows.push(
@@ -131,9 +152,8 @@ export default function RoomManager() {
                 roomList.RoomList[i].location,
                 formatPrice(roomList.RoomList[i].fixed_price),
                 roomList.RoomList[i].investment_price,
-                roomList.RoomList[i].depreciation_period,
+                JSON.parse(roomList.RoomList[i].depreciation_period),
                 roomList.RoomList[i].created_at,
-                roomList.RoomList[i].data,
                 roomList.RoomList[i].id
             )
         );
@@ -143,14 +163,6 @@ export default function RoomManager() {
         setRowsPerPage(roomList.pagination.limit);
     }, [roomList.pagination.limit]);
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
 
     return (
         <>

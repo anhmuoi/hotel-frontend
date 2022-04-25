@@ -14,7 +14,6 @@ SelectField.propTypes = {
 function SelectField(props) {
     const { form, name, label, disabled, selectList, defaultValue } = props;
     const { formState } = form;
-    // console.log(defaultValue);
 
 
     const hasError = !!formState.errors[name];

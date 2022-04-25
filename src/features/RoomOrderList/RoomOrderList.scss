@@ -19,4 +19,21 @@
         align-items: center;
         gap: 5px;
     }
+    &-form {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0px;
+    }
+    &-money {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    &-current-money {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 }

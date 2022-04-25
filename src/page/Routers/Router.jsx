@@ -11,6 +11,7 @@ import RoomCreate from '../../features/RoomList/components/RoomCreate/RoomCreate
 import RoomOrderDetail from '../../features/RoomOrderList/components/RoomOrderDetail/RoomOrderDetail.jsx';
 import RoomOrderCreate from '../../features/RoomOrderList/components/RoomOrderCreate/RoomOrderCreate.jsx';
 import UserDetail from '../../features/UserList/components/UserDetail/UserDetail.jsx';
+import DashBoardDetail from '../../components/DashBoard/DashBoardDetail/DashBoardDetail.jsx';
 
 const RenderHeader = (isHeader, history) => {
     if (!isHeader) {
@@ -45,9 +46,10 @@ function RoutesWrapper() {
 
                 <Route exact path={`/room-manager/create`} component={RoomCreate}></Route>
                 <Route exact path={`/room-manager/:roomId`} component={RoomDetail}></Route>
-                <Route exact path={`/order-manager/create`} component={RoomOrderCreate}></Route>
+                <Route exact path={`/order-manager/create/:roomOrderId`} component={RoomOrderCreate}></Route>
                 <Route exact path={`/order-manager/:roomOrderId`} component={RoomOrderDetail}></Route>
                 <Route exact path={`/user-manager/:userId`} component={UserDetail}></Route>
+                <Route exact path={`/dashboard/:roomId`} component={DashBoardDetail}></Route>
 
                 <Redirect to={RoutesString.PageNotFound} />
             </Switch>

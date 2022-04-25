@@ -16,7 +16,6 @@ function Register(props) {
             const action = register(values);
 
             const resultAction = await dispatch(action);
-            console.log(resultAction);
 
             const user = unwrapResult(resultAction);
             //   console.log('new user',user);
@@ -30,7 +29,6 @@ function Register(props) {
             }
         } catch (error) {
             enqueueSnackbar(error.message, { variant: 'error' });
-            console.log('error', error);
         }
     };
 

@@ -12,6 +12,7 @@ import { useSelector } from 'react-redux';
 import './RoomDetail.scss';
 import RoomApi from '../../../../api/RoomApi.js';
 import storageKeys from '../../../../constants/storage-key.js';
+import { useSnackbar } from 'notistack';
 
 const useStyles = makeStyles((theme) => ({
     avatar: {
@@ -30,7 +31,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function RoomDetail(props) {
-    const { onSubmit } = props;
+    const { enqueueSnackbar } = useSnackbar();
+
     const roomList = useSelector((state) => state.room);
     const [depreciationCount, setDepreciationCount] = React.useState([1]);
     const [dataCount, setDataCount] = React.useState([1]);
@@ -42,9 +44,12 @@ function RoomDetail(props) {
     const history = useHistory();
     const room = roomList.RoomList.find((room) => Number(room.id) === +roomId);
 
+    if (!room) {
+        history.push('/room-manager');
+    }
+
     const schema = yup.object().shape({
         name: yup.string().required('Tên phòng không được để trống'),
-        description: yup.string().required('Mô tả phòng không được để trống'),
         fixed_price: yup.number().required('Giá phòng không được để trống'),
         investment_price: yup.number().required('Giá đầu tư không được để trống'),
         location: yup.string().required('Vị trí phòng không được để trống'),
@@ -55,7 +60,6 @@ function RoomDetail(props) {
             location: room?.location,
             fixed_price: room?.fixed_price,
             investment_price: room?.investment_price ? JSON.parse(room?.investment_price) : ' ',
-            data: room?.data,
         },
         resolver: yupResolver(schema),
     });
@@ -68,25 +72,19 @@ function RoomDetail(props) {
                 delete values[`price${index + 1}`];
                 delete values[`date${index + 1}`];
             });
-            delete values['date'];
             values.depreciation_period = depreciation_period;
 
-            const newData = [];
-            dataCount.map((item, index) => {
-                newData.push({ data: values[`data${index + 1}`], value: values[`value${index + 1}`] });
-                delete values[`data${index + 1}`];
-                delete values[`value${index + 1}`];
-            });
-            delete values['date'];
-            values.data = newData;
-
             values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
-            console.log(values);
 
-            const data = await RoomApi.put(values, roomId);
+            const valuesOptimal = Object.keys(values).filter((key) => values[key] !== undefined);
+            const value_obj = {};
+            valuesOptimal.forEach((key) => (value_obj[key] = values[key]));
+
+            const data = await RoomApi.put(value_obj, roomId);
+            enqueueSnackbar('update success!', { variant: 'success' });
             history.push('/room-manager');
         } catch (error) {
-            console.log(error);
+            enqueueSnackbar(error.message, { variant: 'error' });
         }
     };
 
@@ -97,6 +95,25 @@ function RoomDetail(props) {
     useEffect(() => {
         if (roomList.RoomList.length === 0) {
             history.push('/room-manager');
+        }
+        if (typeof JSON.parse(room?.depreciation_period) === 'string') {
+            if (JSON.parse(JSON.parse(room?.depreciation_period))[0]?.info !== null) {
+                setDepreciationCount(() => {
+                    const newCount = [];
+                    for (let i = 0; i < JSON.parse(JSON.parse(room?.depreciation_period)).length; i++) {
+                        newCount.push(i + 1);
+                    }
+                    return newCount;
+                });
+            }
+        } else if (JSON.parse(room?.depreciation_period)[0]?.info !== null) {
+            setDepreciationCount(() => {
+                const newCount = [];
+                for (let i = 0; i < JSON.parse(room?.depreciation_period).length; i++) {
+                    newCount.push(i + 1);
+                }
+                return newCount;
+            });
         }
     }, []);
 
@@ -125,37 +142,39 @@ function RoomDetail(props) {
                     <Typography component="h4">investment_price</Typography>
                     <InputField form={form} name="investment_price" placeholder="investment_price" />
                 </div>
-                <div className="room-detail-dep">
-                    <div className="room-detail-dep-icon">
-                        <Typography component="h4">data</Typography>
-                        <IconButton onClick={() => setDataCount([...dataCount, dataCount.length + 1])}>
-                            <AddBoxIcon />
-                        </IconButton>
-                        <IconButton onClick={() => setDataCount(dataCount.splice(-1))}>
-                            <RemoveIcon />
-                        </IconButton>
-                    </div>
-                    {dataCount.map((item, index) => (
-                        <div className="room-detail-dep-form" key={index}>
-                            <InputField form={form} name={`data${item}`} placeholder="new data" />
-                            <InputField form={form} name={`value${item}`} placeholder="value" />
-                        </div>
-                    ))}
-                </div>
+
                 <div className="room-detail-dep">
                     <div className="room-detail-dep-icon">
                         <Typography component="h4">depreciation_period</Typography>
                         <IconButton onClick={() => setDepreciationCount([...depreciationCount, depreciationCount.length + 1])}>
                             <AddBoxIcon />
                         </IconButton>
-                        <IconButton onClick={() => setDepreciationCount(depreciationCount.splice(-1))}>
+                        <IconButton onClick={() => setDepreciationCount((prev) => prev.filter((_, i) => i !== prev.length - 1))}>
                             <RemoveIcon />
                         </IconButton>
                     </div>
                     {depreciationCount.map((item, index) => (
                         <div className="room-detail-dep-form" key={index}>
-                            <InputField form={form} name={`date${item}`} placeholder="date: example: 2022/04/12 08:35:17" />
-                            <InputField form={form} name={`price${item}`} placeholder="price" />
+                            <InputField
+                                form={form}
+                                defaultValues={
+                                    typeof JSON.parse(room?.depreciation_period) === 'string'
+                                        ? JSON.parse(JSON.parse(room?.depreciation_period))[index]?.info
+                                        : JSON.parse(room?.depreciation_period)[index]?.info
+                                }
+                                name={`date${item}`}
+                                placeholder="date: example: 2022/04/12 08:35:17"
+                            />
+                            <InputField
+                                form={form}
+                                defaultValues={
+                                    typeof JSON.parse(room?.depreciation_period) === 'string'
+                                        ? JSON.parse(JSON.parse(room?.depreciation_period))[index]?.price
+                                        : JSON.parse(room?.depreciation_period)[index]?.price
+                                }
+                                name={`price${item}`}
+                                placeholder="price"
+                            />
                         </div>
                     ))}
                 </div>

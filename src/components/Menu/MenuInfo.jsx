@@ -1,77 +1,9 @@
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import React, { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import RoomList from '../../features/RoomList/RoomList.jsx';
 import RoomOrderList from '../../features/RoomOrderList/RoomOrderList.jsx';
 import UserList from '../../features/UserList/UserList.jsx';
-import { RoutesString } from '../../page/Routers/routesString.jsx';
-import RoomManager from '../RoomManager/RoomManager.jsx';
-import UserManager from '../UserManager/UserManager.jsx';
-
-const listRoom = [
-    {
-        id: 1,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 2,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 3,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 4,
-        type: 'P.ĐƠN',
-        price: '1.000.000',
-        status: 'booked',
-    },
-    {
-        id: 5,
-        type: 'P.ĐÔI',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 6,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 7,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 8,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 9,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-    {
-        id: 10,
-        type: 'P.VIP',
-        price: '1.000.000',
-        status: 'free',
-    },
-];
 
 const tabNameToIndex = {
     0: 'user-manager',
@@ -142,6 +74,7 @@ function MenuInfo({ propsRouter }) {
                     variant="scrollable"
                     value={value}
                     onChange={handleChange}
+                    onClick={() => history.push({ pathname: history.location.pathname })}
                     aria-label="Vertical tabs example"
                     sx={{ borderRight: 1, borderColor: 'divider' }}
                 >

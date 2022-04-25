@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material';
 import { Box } from '@mui/system';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './UserDetail.scss';
 import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
@@ -15,6 +15,8 @@ import orderApi from '../../../../api/orderApi.js';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import RemoveIcon from '@mui/icons-material/Remove';
 import storageKeys from '../../../../constants/storage-key.js';
+import userApi from '../../../../api/userApi.js';
+import { useSnackbar } from 'notistack';
 
 const useStyles = makeStyles((theme) => ({
     avatar: {
@@ -50,10 +52,8 @@ const selectorderList = [
 const kenhList = ['online', 'sale'];
 
 function UserDetail(props) {
-    const user = useSelector((state) => state.user);
-    const [additionalCount, setadditionalCount] = React.useState([1]);
-
-    const roomOrderList = useSelector((state) => state.order);
+    const [user, setUser] = useState();
+    const { enqueueSnackbar } = useSnackbar();
 
     const history = useHistory();
     const {
@@ -61,36 +61,42 @@ function UserDetail(props) {
         url,
     } = useRouteMatch();
 
-    const order = roomOrderList?.RoomOrderList.find((room) => room.data && JSON.parse(room.data)[0]?.room_id === +userId);
-
-    const schema = yup.object().shape({});
+    const schema = yup.object().shape({
+        name: yup.string().required('Please enter your name'),
+        email: yup.string().required('Please enter your email').email('Please enter invalid email'),
+        phone: yup.string().required('Please enter your phone'),
+        location: yup.string().required('Please enter your location'),
+        password: yup.string().required('Please enter your password').min(8, 'Please enter at lease 8 characters'),
+    });
     const form = useForm({
         defaultValues: {
-            nameuser: order?.customer,
-            email: order?.sale,
-            type: order?.phone_customer,
-      
+            name: '',
+            email: '',
+            type: '',
+            phone: '',
+            location: '',
         },
         resolver: yupResolver(schema),
     });
 
+    useEffect(() => {
+        (async () => {
+            const user = await userApi.getId({ user: JSON.parse(localStorage.getItem(storageKeys.USER)).user }, userId);
+            setUser(user.data.data);
+        })();
+    }, []);
+
     const handleSubmit = async (values) => {
         try {
-            const additional_price = [];
-            additionalCount.map((item, index) => {
-                additional_price.push({ info: values[`info${index + 1}`], price: values[`value${index + 1}`] });
-                delete values[`value${index + 1}`];
-                delete values[`info${index + 1}`];
-            });
-            // delete values['date'];
-            values.data = additional_price;
             values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
 
-            console.log(values);
-            const data = await orderApi.put(values, userId);
-            console.log(data);
+            const data = await userApi.put(values, userId);
+            enqueueSnackbar('Cập nhật thành công', {
+                variant: 'success',
+            });
+            history.push(`/user-manager`);
         } catch (error) {
-            console.log(error);
+            enqueueSnackbar(error.message, { variant: 'error' });
         }
     };
 
@@ -108,42 +114,28 @@ function UserDetail(props) {
             <form onSubmit={form.handleSubmit(handleSubmit)}>
                 <div className="room-detail-name-customer">
                     <Typography component="h4">Name User</Typography>
-                    <InputField form={form} name="nameuser" label="name user" />
+                    <InputField form={form} name="name" defaultValues={user?.name} />
                 </div>
                 <div>
                     <Typography component="h4">Email</Typography>
-                    <InputField form={form} name="email" label="email" />
+                    <InputField form={form} name="email" defaultValues={user?.email} />
+                </div>
+                <div>
+                    <Typography component="h4">Password</Typography>
+                    <InputField form={form} name="password" />
                 </div>
                 <div>
                     <Typography component="h4">Type</Typography>
-                    <InputField form={form} name="type" label="SĐT" />
+                    <InputField form={form} name="type" defaultValues={user?.type} />
                 </div>
 
                 <div>
                     <Typography component="h4">Location</Typography>
-                    <InputField form={form} name="location" label="location" />
+                    <InputField form={form} name="location" defaultValues={user?.location} />
                 </div>
                 <div>
                     <Typography component="h4">Phone</Typography>
-                    <InputField form={form} name="phone" label="phone" />
-                </div>
-
-                <div className="order-detail-dep">
-                    <div className="room-detail-dep-icon">
-                        <Typography component="h4">data</Typography>
-                        <IconButton onClick={() => setadditionalCount([...additionalCount, additionalCount.length + 1])}>
-                            <AddBoxIcon />
-                        </IconButton>
-                        <IconButton onClick={() => setadditionalCount(additionalCount.splice(-1))}>
-                            <RemoveIcon />
-                        </IconButton>
-                    </div>
-                    {additionalCount.map((item, index) => (
-                        <div className="room-detail-dep-form" key={index}>
-                            <InputField form={form} name={`info${item}`} placeholder="info" />
-                            <InputField form={form} name={`value${item}`} placeholder="value" />
-                        </div>
-                    ))}
+                    <InputField form={form} name="phone" defaultValues={user?.phone} />
                 </div>
 
                 <Button size="large" type="submit" className={classes.submit} variant="contained" color="primary">

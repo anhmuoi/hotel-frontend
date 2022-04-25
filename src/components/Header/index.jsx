@@ -52,12 +52,10 @@ export default function Header() {
     const classes = useStyles();
 
     const LoggedIn = JSON.parse(localStorage.getItem(storageKeys.USER));
-    console.log(LoggedIn);
 
     const history = useHistory();
 
     const isLoggedIn = LoggedIn?.user;
-    console.log(isLoggedIn);
 
     const [mode, setMode] = useState(MODE.LOGIN);
 

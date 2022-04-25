@@ -1,21 +1,22 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material';
-import { Box } from '@mui/system';
-import React from 'react';
-import './RoomOrderCreate.scss';
-import * as yup from 'yup';
-import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LinearProgress, makeStyles, Typography } from '@material-ui/core';
-import InputField from '../../../../components/form-controls/InputField/index.jsx';
-import CheckBoxField from '../../../../components/form-controls/CheckBoxField/index.jsx';
-import SelectField from '../../../../components/form-controls/SelectField/index.jsx';
-import { useRouteMatch } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import storageKeys from '../../../../constants/storage-key.js';
-import orderApi from '../../../../api/orderApi.js';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { Button, IconButton } from '@mui/material';
+import { useSnackbar } from 'notistack';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { useSelector } from 'react-redux';
+import { useHistory, useRouteMatch } from 'react-router-dom';
+import * as yup from 'yup';
+import orderApi from '../../../../api/orderApi.js';
+import RoomApi from '../../../../api/RoomApi.js';
 import DateTimeField from '../../../../components/form-controls/DateTimeField/index.jsx';
+import InputField from '../../../../components/form-controls/InputField/index.jsx';
+import SelectField from '../../../../components/form-controls/SelectField/index.jsx';
+import storageKeys from '../../../../constants/storage-key.js';
+import { compareTime } from '../../../../Utils/common.js';
+import './RoomOrderCreate.scss';
 
 const useStyles = makeStyles((theme) => ({
     avatar: {
@@ -33,44 +34,39 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const kenhList = ['online', 'sale'];
+const kenhList = ['Online', 'Sale'];
 
 function RoomOrderCreate(props) {
+    const { enqueueSnackbar } = useSnackbar();
+    const {
+        params: { roomOrderId },
+        url,
+    } = useRouteMatch();
+
     const user = useSelector((state) => state.user);
-    console.log(user.current.data.name);
     const [additionalCount, setadditionalCount] = React.useState([1]);
-    const roomList = useSelector((state) => state.room);
+    const history = useHistory();
 
     const schema = yup.object().shape({
-        idroom: yup
-            .number()
-            .test('idroom', 'phòng này không tồn tại', (value) => {
-                const room = roomList.RoomList.find((room) => Number(room.id) === +value);
-
-                if (room) {
-                    return true;
-                } else {
-                    return false;
-                }
-            })
-            .required('Vui lòng chọn phòng'),
-        namecustomer: yup.string().required('Tên không được để trống'),
-        namestaff: yup.string().required('Nhân viên không được để trống'),
-        phonecustomer: yup.string().required('Số điện thoại không được để trống'),
+        room_id: yup.number().required('Vui lòng chọn phòng'),
+        customer: yup.string().required('Tên không được để trống'),
+        sale: yup.string().required('Nhân viên không được để trống'),
+        phone_customer: yup.number().required('Số điện thoại không được để trống'),
+        type_booking: yup.string().required('kiểu thuê không được để trống'),
         type: yup.number().required('price/hour không được để trống'),
-        in_expected: yup.date().required('Thời gian dự kiến không được để trống'),
+        in_expected: yup.string().required('Thời gian dự kiến không được để trống'),
         out_expected: yup.string().required('Thời gian dự kiến không được để trống'),
-        in_reality: yup.string(),
-        out_reality: yup.string(),
+        // in_reality: yup.string(),
+        // out_reality: yup.string(),
     });
     const form = useForm({
         defaultValues: {
-            idroom: '',
-            namecustomer: '',
-            namestaff: '',
-            phonecustomer: '',
+            room_id: roomOrderId,
+            customer: '',
+            sale: '',
+            phone_customer: '',
             type: '',
-            kenh: '',
+            type_booking: '',
             in_expected: null,
             out_expected: null,
             in_reality: null,
@@ -82,21 +78,74 @@ function RoomOrderCreate(props) {
     const handleSubmit = async (values) => {
         try {
             const additional_price = [];
+            let total_price = 0;
             additionalCount.map((item, index) => {
                 additional_price.push({ info: values[`add_price${index + 1}`], price: values[`price${index + 1}`] });
+                values[`price${index + 1}`] ? (total_price += Number(values[`price${index + 1}`])) : (total_price += 0);
                 delete values[`price${index + 1}`];
                 delete values[`add_price${index + 1}`];
             });
             // delete values['date'];
             values.additional_price = additional_price;
             values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
+            if (values.in_reality && values.out_reality) {
+                // return number of hour
+                const diff = Math.abs(new Date(values.out_reality) - new Date(values.in_reality));
+                const hours = Math.floor(diff / 36e5);
+                total_price += hours * values.type;
+            } else if (values.in_expected && values.out_expected) {
+                const diff = Math.abs(new Date(values.out_expected) - new Date(values.in_expected));
+                const hours = Math.floor(diff / 36e5);
+                total_price += hours * Number(values.type);
+            }
+            values.total_price = total_price;
+
             const data = [];
-            data.push({ room_id: values['idroom'] });
+            // data.push({ room_id: values['room_id'] });
             values.data = data;
 
-            const result = await orderApi.create(values);
+            try {
+                if (values.room_id) {
+                    const room = await RoomApi.getId({ user: JSON.parse(localStorage.getItem(storageKeys.USER)).user }, values.room_id);
+
+                    const roomIndex = await orderApi.getAll({ room_id: values.room_id });
+                    if (!room.data) {
+                        enqueueSnackbar('phòng không tồn tại', { variant: 'error' });
+                    } else {
+                        let temp = true;
+
+                        roomIndex.data.map((item) => {
+                            if (item.id && new Date(item.out_expected) >= new Date()) {
+                                if (
+                                    compareTime(new Date(item.in_expected), new Date(item.out_expected), values.in_expected) ||
+                                    compareTime(new Date(item.in_expected), new Date(item.out_expected), values.out_expected) ||
+                                    compareTime(new Date(values.in_expected), new Date(values.out_expected), new Date(item.in_expected)) ||
+                                    compareTime(new Date(values.in_expected), new Date(values.out_expected), new Date(item.out_expected))
+                                ) {
+                                    temp = false;
+                                }
+                            }
+                        });
+
+                        if (temp === true) {
+                            const valuesOptimal = Object.keys(values).filter((key) => values[key] !== undefined);
+                            const value_obj = {};
+                            valuesOptimal.forEach((key) => (value_obj[key] = values[key]));
+
+                            const result = await orderApi.create(value_obj);
+
+                            enqueueSnackbar('update success!', { variant: 'success' });
+                            history.push('/order-manager');
+                        } else {
+                            enqueueSnackbar('Thời gian đặt phòng bị trùng', { variant: 'error' });
+                        }
+                    }
+                }
+            } catch (error) {
+                enqueueSnackbar(error.message, { variant: 'error' });
+            }
         } catch (error) {
-            console.log(error);
+            enqueueSnackbar(error.message, { variant: 'error' });
         }
     };
 
@@ -113,20 +162,20 @@ function RoomOrderCreate(props) {
 
             <form onSubmit={form.handleSubmit(handleSubmit)}>
                 <div className="room-detail-idroom">
-                    <Typography component="h4">số phòng</Typography>
-                    <InputField form={form} name="idroom" label="số phòng" />
+                    <Typography  component="h4">số phòng</Typography>
+                    <InputField  disabled form={form} name="room_id" label="số phòng" />
                 </div>
                 <div className="room-detail-name-customer">
                     <Typography component="h4">Tên Khách Hàng</Typography>
-                    <InputField form={form} name="namecustomer" label="tên khách hàng" />
+                    <InputField form={form} name="customer" label="tên khách hàng" />
                 </div>
                 <div>
                     <Typography component="h4">Tên Nhân viên bán hàng</Typography>
-                    <InputField form={form} name="namestaff" label="tên nhân viên" />
+                    <InputField form={form} name="sale" label="tên nhân viên" />
                 </div>
                 <div>
                     <Typography component="h4">Số ĐT Khách hàng</Typography>
-                    <InputField form={form} name="phonecustomer" label="SĐT" />
+                    <InputField form={form} name="phone_customer" label="SĐT" />
                 </div>
                 <div>
                     <Typography component="h4">Kiểu thuê </Typography>
@@ -156,7 +205,7 @@ function RoomOrderCreate(props) {
                         <IconButton onClick={() => setadditionalCount([...additionalCount, additionalCount.length + 1])}>
                             <AddBoxIcon />
                         </IconButton>
-                        <IconButton onClick={() => setadditionalCount(additionalCount.splice(-1))}>
+                        <IconButton onClick={() => setadditionalCount((prev) => prev.filter((_, i) => i !== prev.length - 1))}>
                             <RemoveIcon />
                         </IconButton>
                     </div>
@@ -169,7 +218,7 @@ function RoomOrderCreate(props) {
                 </div>
                 <div>
                     <Typography component="h4">Khách đặt qua kênh nào </Typography>
-                    <SelectField selectList={kenhList} form={form} name="kenh" />
+                    <SelectField selectList={kenhList} form={form} name="type_booking" />
                 </div>
 
                 <Button size="large" type="submit" className={classes.submit} variant="contained" color="primary">

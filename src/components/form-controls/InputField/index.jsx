@@ -4,39 +4,44 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 
 InputField.propTypes = {
-  form: PropTypes.object.isRequired,
-  name: PropTypes.string.isRequired,
+    form: PropTypes.object.isRequired,
+    name: PropTypes.string.isRequired,
 
-  label: PropTypes.string,
-  disabled: PropTypes.bool,
-  placeholder: PropTypes.string,
+    label: PropTypes.string,
+    disabled: PropTypes.bool,
+    placeholder: PropTypes.string,
 };
 
 function InputField(props) {
-  const { form, name, label, disabled, placeholder } = props;
-  const { formState } = form;
+    const { form, name, label, disabled, placeholder, defaultValues } = props;
+    const { formState } = form;
 
-  const hasError = !!formState.errors[name];
+    // set default values
+    if (defaultValues) {
+        form.setValue(name, defaultValues);
+    }
 
-  return (
-    <Controller
-      name={name}
-      control={form.control}
-      disabled={disabled}
-      render={({ field }) => (
-        <TextField
-          {...field}
-          fullWidth
-          label={label}
-          margin="normal"
-          variant="outlined"
-          error={hasError}
-          helperText={formState.errors[name]?.message}
-          placeholder={placeholder}
+    const hasError = !!formState.errors[name];
+
+    return (
+        <Controller
+            name={name}
+            control={form.control}
+            render={({ field }) => (
+                <TextField
+                    {...field}
+                    disabled={disabled}
+                    fullWidth
+                    label={label}
+                    margin="normal"
+                    variant="outlined"
+                    error={hasError}
+                    helperText={formState.errors[name]?.message}
+                    placeholder={placeholder}
+                />
+            )}
         />
-      )}
-    />
-  );
+    );
 }
 
 export default InputField;

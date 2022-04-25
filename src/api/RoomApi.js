@@ -10,15 +10,21 @@ const RoomApi = {
                 page: params.page,
                 limit: params.limit,
             },
+            total: RoomList.data.total,
+
         };
+    },
+    getId(params, id) {
+        const url = `/get/room/${id}`;
+        return axiosClient.get(url, params);
     },
     create(params) {
         const url = `/room/create`;
-        return axiosClient.post(url, { params });
+        return axiosClient.post(url,  params );
     },
     put(params, id) {
         const url = `/room/update/${id}`;
-        return axiosClient.put(url, { params });
+        return axiosClient.put(url, params);
     },
     delete(params, id) {
         const url = `/room/delete/${id}`;

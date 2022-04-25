@@ -18,6 +18,7 @@ import storageKeys from '../../constants/storage-key.js';
 import { useHistory } from 'react-router-dom';
 import orderApi from '../../api/orderApi.js';
 import userApi from '../../api/userApi.js';
+import { useSnackbar } from 'notistack';
 
 function createData(id, name, email, phone, location, created_at, data, type) {
     return {
@@ -40,6 +41,7 @@ function Row(props) {
     const { row } = props;
     const [open, setOpen] = React.useState(false);
     const history = useHistory();
+    const { enqueueSnackbar } = useSnackbar();
 
     // get userId in localstorage
     const userId = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
@@ -47,8 +49,9 @@ function Row(props) {
     const handleClickRemove = async () => {
         try {
             const data = await userApi.delete({ user: userId }, row.id);
+            window.location.reload();
         } catch (error) {
-            console.log('fail to remove room ', error.message);
+            enqueueSnackbar(error.message, { variant: 'error' });
         }
     };
     const handleClickUpdate = () => {
@@ -73,10 +76,20 @@ function Row(props) {
                 <TableCell align="center">{row.email}</TableCell>
                 <TableCell align="center">{row.type}</TableCell>
                 <TableCell width={200} align="center">
-                    <Button onClick={() => handleClickUpdate()} color="success" variant="outlined">
+                    <Button
+                        onClick={() => handleClickUpdate()}
+                        disabled={row.id !== userId || JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        color="success"
+                        variant="outlined"
+                    >
                         Update
                     </Button>
-                    <Button onClick={() => handleClickRemove()} color="error" variant="outlined">
+                    <Button
+                        onClick={() => handleClickRemove()}
+                        color="error"
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        variant="outlined"
+                    >
                         Remove
                     </Button>
                 </TableCell>
@@ -95,8 +108,6 @@ function Row(props) {
 
                                         <TableCell align="center">location</TableCell>
                                         <TableCell align="center">create_at</TableCell>
-                                        <TableCell align="center">data</TableCell>
-                                        {/* <TableCell align="center">room_name</TableCell> */}
                                     </TableRow>
                                 </TableHead>
 
@@ -113,12 +124,6 @@ function Row(props) {
                                                 <TableCell align="center" component="th" scope="row">
                                                     {infoRow.created_at}
                                                 </TableCell>
-                                                {infoRow.data !== 'null' ? (
-                                                    <>
-                                                        <TableCell align="center">{JSON.parse(infoRow.data)[0].room_id}</TableCell>
-                                                        <TableCell align="center">{JSON.parse(infoRow?.data)[0].room_name}</TableCell>
-                                                    </>
-                                                ) : null}
                                             </TableRow>
                                         </>
                                     ))}
@@ -136,7 +141,6 @@ function Row(props) {
 
 export default function UserManager({ userList }) {
     const [page, setPage] = React.useState(0);
-    console.log('userList', userList);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const rows = [];

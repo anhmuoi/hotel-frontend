@@ -36,10 +36,7 @@ function RegisterForm(props) {
     const { onSubmit } = props;
 
     const schema = yup.object().shape({
-        name: yup
-            .string()
-            .required('Please enter your name')
-            .min(6, 'Please enter at least 6 characters'),
+        name: yup.string().required('Please enter your name').min(6, 'Please enter at least 6 characters'),
 
         // email or phone
         email: yup
@@ -70,7 +67,13 @@ function RegisterForm(props) {
 
         type: yup.mixed().oneOf(['admin', 'user']).required('Please type user or admin'),
 
-        password: yup.string().required('Please enter your password').min(6, 'Please enter at lease 6 characters'),
+        password: yup
+            .string()
+            .required('Please Enter your password')
+            .matches(
+                /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/,
+                'Must Contain 8 Characters, One Uppercase, One Lowercase, One Number and one special case Character'
+            ),
 
         retypePassword: yup
             .string()
@@ -93,8 +96,8 @@ function RegisterForm(props) {
     });
 
     const handleSubmit = async (values) => {
-        console.log(values);
         delete values.retypePassword;
+        values.data = [];
         await onSubmit(values);
     };
 

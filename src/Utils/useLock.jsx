@@ -24,7 +24,6 @@ function useClock() {
         }, 1000);
         return () => {
             // cleanup
-            console.log('Clock cleanup');
             clearInterval(clockInterval);
         };
     }, []);

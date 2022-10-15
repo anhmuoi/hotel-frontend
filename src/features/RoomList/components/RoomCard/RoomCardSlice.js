@@ -11,7 +11,7 @@ export const getRoomList = createAsyncThunk('room/getAll', async (payload) => {
 const initialState = {
   RoomList: [],
   pagination: {},
-  total: 0,
+
 };
 
 const RoomSlice = createSlice({
@@ -41,9 +41,8 @@ const RoomSlice = createSlice({
   },
   extraReducers: {
         [getRoomList.fulfilled]: (state, action) => {
-            state.RoomList = action.payload.data;
-            state.pagination = action.payload.pagination;
-            state.total = action.payload.total;
+            state.RoomList = action.payload.data.data;
+            state.pagination = action.payload.data.pagination;
 
         },
     },

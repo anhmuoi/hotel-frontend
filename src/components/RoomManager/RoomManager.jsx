@@ -19,20 +19,20 @@ import { useHistory } from 'react-router-dom';
 import { getRoomList } from '../../features/RoomList/components/RoomCard/RoomCardSlice.js';
 import { useSnackbar } from 'notistack';
 
-function createData(name, location, priceMonth, priceInvestDate, DepreciationTime, created_at, id) {
-    if (typeof DepreciationTime === 'string' || DepreciationTime instanceof String) {
-        DepreciationTime = JSON.parse(DepreciationTime);
-    }
+function createData(name, priceMonth, priceInvestDate, description, created_at, id) {
+    // if (typeof DepreciationTime === 'string' || DepreciationTime instanceof String) {
+    //     DepreciationTime = JSON.parse(DepreciationTime);
+    // }
     return {
         name,
-        location,
+
         priceMonth,
         priceInvestDate,
         id,
         info: [
             {
                 created_at: created_at,
-                DepreciationTime: DepreciationTime,
+                description: description,
             },
         ],
     };
@@ -50,7 +50,7 @@ function Row(props) {
 
     const handleClickRemove = async () => {
         try {
-            const data = await RoomApi.delete({ user: userId }, row.id);
+            const data = await RoomApi.delete(row.id);
             const action = getRoomList({ page: 1, limit: 10 });
             const resultAction = await dispatch(action);
         } catch (error) {
@@ -74,13 +74,12 @@ function Row(props) {
                 </TableCell>
                 <TableCell align="center">{row.name}</TableCell>
 
-                <TableCell align="center">{row.location}</TableCell>
                 <TableCell align="center">{row.priceMonth}</TableCell>
                 <TableCell align="center">{row.priceInvestDate}</TableCell>
                 <TableCell width={200} align="center">
                     <Button
                         onClick={() => handleClickUpdate()}
-                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).type === 'user'}
                         color="success"
                         variant="outlined"
                     >
@@ -89,7 +88,7 @@ function Row(props) {
                     <Button
                         onClick={() => handleClickRemove()}
                         color="error"
-                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).type === 'user'}
                         variant="outlined"
                     >
                         Remove
@@ -107,7 +106,7 @@ function Row(props) {
                                 <TableHead>
                                     <TableRow>
                                         <TableCell align="center">create_at</TableCell>
-                                        <TableCell align="center">DepreciationTime</TableCell>
+                                        <TableCell align="center">description</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -116,17 +115,7 @@ function Row(props) {
                                             <TableCell align="center" component="th" scope="row">
                                                 {infoRow.created_at}
                                             </TableCell>
-                                            <TableCell align="center">
-                                                {((infoRow?.DepreciationTime && infoRow.DepreciationTime[0]?.length !== 0) ||
-                                                    (infoRow.DepreciationTime[0]?.length === 0 && infoRow.DepreciationTime?.length !== 1)) &&
-                                                    infoRow.DepreciationTime.map((item, index) => (
-                                                        <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                            <p>{item?.info}: &nbsp;</p>
-
-                                                            <span>{formatPrice(item?.price)}</span>
-                                                        </div>
-                                                    ))}
-                                            </TableCell>
+                                            <TableCell align="center">{infoRow.description}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -142,27 +131,22 @@ function Row(props) {
 export default function RoomManager() {
     const [page, setPage] = React.useState(0);
     const roomList = useSelector((state) => state.room);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    console.log(roomList);
 
     const rows = [];
     for (let i = 0; i < roomList.RoomList?.length; i++) {
         rows.push(
             createData(
                 roomList.RoomList[i].name,
-                roomList.RoomList[i].location,
+
                 formatPrice(roomList.RoomList[i].fixed_price),
                 roomList.RoomList[i].investment_price,
-                JSON.parse(roomList.RoomList[i].depreciation_period),
+                roomList.RoomList[i].description,
                 roomList.RoomList[i].created_at,
                 roomList.RoomList[i].id
             )
         );
     }
-
-    React.useEffect(() => {
-        setRowsPerPage(roomList.pagination.limit);
-    }, [roomList.pagination.limit]);
-
 
     return (
         <>
@@ -173,7 +157,7 @@ export default function RoomManager() {
                             <TableCell />
                             <TableCell align="center">id</TableCell>
                             <TableCell align="center">name</TableCell>
-                            <TableCell align="center">location</TableCell>
+
                             <TableCell align="center">priceMonth</TableCell>
                             <TableCell align="center">priceInvestDate</TableCell>
                             <TableCell align="center"></TableCell>

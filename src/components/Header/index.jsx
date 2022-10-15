@@ -55,7 +55,7 @@ export default function Header() {
 
     const history = useHistory();
 
-    const isLoggedIn = LoggedIn?.user;
+    const isLoggedIn = LoggedIn;
 
     const [mode, setMode] = useState(MODE.LOGIN);
 

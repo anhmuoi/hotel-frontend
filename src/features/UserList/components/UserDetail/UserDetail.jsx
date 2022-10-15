@@ -81,14 +81,15 @@ function UserDetail(props) {
 
     useEffect(() => {
         (async () => {
-            const user = await userApi.getId({ user: JSON.parse(localStorage.getItem(storageKeys.USER)).user }, userId);
-            setUser(user.data.data);
+            const user = await userApi.getId(userId);
+            console.log(user);
+            setUser(user.data);
         })();
     }, []);
 
     const handleSubmit = async (values) => {
         try {
-            values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
+        
 
             const data = await userApi.put(values, userId);
             enqueueSnackbar('Cập nhật thành công', {

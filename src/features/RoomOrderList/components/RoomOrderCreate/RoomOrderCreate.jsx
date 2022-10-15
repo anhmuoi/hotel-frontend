@@ -50,12 +50,14 @@ function RoomOrderCreate(props) {
     const schema = yup.object().shape({
         room_id: yup.number().required('Vui lòng chọn phòng'),
         customer: yup.string().required('Tên không được để trống'),
+        customer_id: yup.number().required('id không được để trống'),
         sale: yup.string().required('Nhân viên không được để trống'),
         phone_customer: yup.number().required('Số điện thoại không được để trống'),
-        type_booking: yup.string().required('kiểu thuê không được để trống'),
+        type_booking: yup.string().required('giá thuê không được để trống'),
         type: yup.number().required('price/hour không được để trống'),
         in_expected: yup.string().required('Thời gian dự kiến không được để trống'),
         out_expected: yup.string().required('Thời gian dự kiến không được để trống'),
+        discount: yup.string().required("yêu cầu nhập discount")
         // in_reality: yup.string(),
         // out_reality: yup.string(),
     });
@@ -63,6 +65,7 @@ function RoomOrderCreate(props) {
         defaultValues: {
             room_id: roomOrderId,
             customer: '',
+            customer_id: '',
             sale: '',
             phone_customer: '',
             type: '',
@@ -71,6 +74,7 @@ function RoomOrderCreate(props) {
             out_expected: null,
             in_reality: null,
             out_reality: null,
+            discount: '0%'
         },
         resolver: yupResolver(schema),
     });
@@ -87,7 +91,7 @@ function RoomOrderCreate(props) {
             });
             // delete values['date'];
             values.additional_price = additional_price;
-            values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
+        
             if (values.in_reality && values.out_reality) {
                 // return number of hour
                 const diff = Math.abs(new Date(values.out_reality) - new Date(values.in_reality));
@@ -98,15 +102,13 @@ function RoomOrderCreate(props) {
                 const hours = Math.floor(diff / 36e5);
                 total_price += hours * Number(values.type);
             }
-            values.total_price = total_price;
+            values.total_price = total_price - total_price* (values.discount.split('%')[0]/100);
 
-            const data = [];
-            // data.push({ room_id: values['room_id'] });
-            values.data = data;
+    
 
             try {
                 if (values.room_id) {
-                    const room = await RoomApi.getId({ user: JSON.parse(localStorage.getItem(storageKeys.USER)).user }, values.room_id);
+                    const room = await RoomApi.getId(values.room_id);
 
                     const roomIndex = await orderApi.getAll({ room_id: values.room_id });
                     if (!room.data) {
@@ -114,7 +116,7 @@ function RoomOrderCreate(props) {
                     } else {
                         let temp = true;
 
-                        roomIndex.data.map((item) => {
+                        roomIndex.data && roomIndex?.data.map((item) => {
                             if (item.id && new Date(item.out_expected) >= new Date()) {
                                 if (
                                     compareTime(new Date(item.in_expected), new Date(item.out_expected), values.in_expected) ||
@@ -126,14 +128,14 @@ function RoomOrderCreate(props) {
                                 }
                             }
                         });
-
+                        console.log(temp)
                         if (temp === true) {
                             const valuesOptimal = Object.keys(values).filter((key) => values[key] !== undefined);
                             const value_obj = {};
                             valuesOptimal.forEach((key) => (value_obj[key] = values[key]));
 
                             const result = await orderApi.create(value_obj);
-
+                            console.log(result);
                             enqueueSnackbar('update success!', { variant: 'success' });
                             history.push('/order-manager');
                         } else {
@@ -153,6 +155,11 @@ function RoomOrderCreate(props) {
 
     const { formState } = form;
 
+
+    const handleGenerateId = () => {
+        form.setValue('customer_id', new Date().getTime());
+    }
+
     return (
         <div className="room-create">
             {formState.isSubmitting && <LinearProgress />}
@@ -164,6 +171,11 @@ function RoomOrderCreate(props) {
                 <div className="room-detail-idroom">
                     <Typography  component="h4">số phòng</Typography>
                     <InputField  disabled form={form} name="room_id" label="số phòng" />
+                </div>
+                <div className="room-detail-name-customer">
+                    <Typography component="h4">id Khách Hàng</Typography>
+                    <InputField form={form} name="customer_id" label="id khách hàng" />
+                    <Button variant='contained' onClick={()=> handleGenerateId()} >Generate id</Button>
                 </div>
                 <div className="room-detail-name-customer">
                     <Typography component="h4">Tên Khách Hàng</Typography>
@@ -178,11 +190,14 @@ function RoomOrderCreate(props) {
                     <InputField form={form} name="phone_customer" label="SĐT" />
                 </div>
                 <div>
-                    <Typography component="h4">Kiểu thuê </Typography>
+                    <Typography component="h4">Giá thuê </Typography>
 
                     <InputField form={form} name="type" label="price/hour" />
                 </div>
-
+                <div>
+                    <Typography component="h4">Discount</Typography>
+                    <InputField form={form} name="discount" label="discount" />
+                </div>
                 <div>
                     <Typography component="h4">giờ vào dự kiến</Typography>
                     <DateTimeField form={form} name="in_expected" label="giờ vào dự kiến" />

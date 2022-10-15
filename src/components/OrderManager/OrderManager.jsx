@@ -48,7 +48,7 @@ function createData(
         info: [
             {
                 created_at: created_at,
-                additional_price: JSON.parse(additional_price),
+                additional_price: additional_price,
                 type_booking: type_booking,
                 data: data,
                 phone_customer: phone_customer,
@@ -71,11 +71,11 @@ function Row(props) {
     const { enqueueSnackbar } = useSnackbar();
 
     // get userId in localstorage
-    const userId = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
+    const userId = JSON.parse(localStorage.getItem(storageKeys.USER)).id;
 
     const handleClickRemove = async () => {
         try {
-            const data = await orderApi.delete({ user: userId }, row.id);
+            const data = await orderApi.delete(userId);
             window.location.reload();
         } catch (error) {
             enqueueSnackbar(error.message, { variant: 'error' });
@@ -105,7 +105,7 @@ function Row(props) {
                 <TableCell width={200} align="center">
                     <Button
                         onClick={() => handleClickUpdate()}
-                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).type === 'user'}
                         color="success"
                         variant="outlined"
                     >
@@ -114,7 +114,7 @@ function Row(props) {
                     <Button
                         onClick={() => handleClickRemove()}
                         color="error"
-                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).type === 'user'}
                         variant="outlined"
                     >
                         Remove

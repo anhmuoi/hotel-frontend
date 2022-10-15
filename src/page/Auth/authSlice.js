@@ -24,8 +24,8 @@ export const login = createAsyncThunk('user/login', async (payload) => {
     //call api
     const { data } = await authApi.login(payload);
     // save data to localStorage
-    localStorage.setItem(storageKeys.ACCESS_TOKEN, data.api_token);
-    localStorage.setItem(storageKeys.USER, JSON.stringify(data));
+    localStorage.setItem(storageKeys.ACCESS_TOKEN, data.access_token);
+    localStorage.setItem(storageKeys.USER, JSON.stringify(data.user));
 
     // handle expired token here
 
@@ -51,7 +51,7 @@ const authSlice = createSlice({
             state.current = action.payload;
         },
         [login.fulfilled]: (state, action) => {
-            state.current = action.payload;
+            state.current = action.payload.user;
         },
     },
 });

@@ -46,7 +46,7 @@ function RoomOrderDetail(props) {
         url,
     } = useRouteMatch();
 
-    const order = roomOrderList?.RoomOrderList.find((order) => order.id === +roomOrderId);
+    const order = roomOrderList?.RoomOrderList.find((order) => order.id === roomOrderId);
     if (!order) {
         history.push('/order-manager');
     }
@@ -56,12 +56,15 @@ function RoomOrderDetail(props) {
     const schema = yup.object().shape({
         room_id: yup.number().required('Vui lòng chọn phòng'),
         customer: yup.string().required('Tên không được để trống'),
+        customer_id: yup.number().required('id không được để trống'),
         sale: yup.string().required('Nhân viên không được để trống'),
         phone_customer: yup.number().required('Số điện thoại không được để trống'),
-        type_booking: yup.string().required('kiểu thuê không được để trống'),
+        type_booking: yup.string().required('giá thuê không được để trống'),
         type: yup.number().required('price/hour không được để trống'),
         in_expected: yup.string().required('Thời gian dự kiến không được để trống'),
         out_expected: yup.string().required('Thời gian dự kiến không được để trống'),
+        discount: yup.string().required('yêu cầu nhập discount'),
+        review_customer: yup.string().required('điền đánh giá'),
         // in_reality: yup.string(),
         // out_reality: yup.string(),
     });
@@ -69,6 +72,7 @@ function RoomOrderDetail(props) {
         defaultValues: {
             room_id: order?.room_id,
             customer: order?.customer,
+            customer_id: order?.customer_id,
             sale: order?.sale,
             phone_customer: order?.phone_customer,
             type: order?.type,
@@ -77,15 +81,17 @@ function RoomOrderDetail(props) {
             out_expected: order?.out_expected,
             in_reality: order?.in_reality,
             out_reality: order?.out_reality,
+            discount: order?.discount,
+            review_customer: order?.review_customer,
         },
         resolver: yupResolver(schema),
     });
 
     useEffect(() => {
-        if (JSON.parse(order?.additional_price)[0]?.info !== null) {
+        if (order?.additional_price[0]?.info !== null) {
             setadditionalCount(() => {
                 const newCount = [];
-                for (let i = 0; i < JSON.parse(order?.additional_price).length; i++) {
+                for (let i = 0; i < order?.additional_price.length; i++) {
                     newCount.push(i + 1);
                 }
                 return newCount;
@@ -109,7 +115,6 @@ function RoomOrderDetail(props) {
             });
             // delete values['date'];
             values.additional_price = additional_price;
-            values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
             if (values.in_reality && values.out_reality) {
                 // return number of hour
                 const diff = Math.abs(new Date(values.out_reality) - new Date(values.in_reality));
@@ -120,7 +125,7 @@ function RoomOrderDetail(props) {
                 const hours = Math.floor(diff / 36e5);
                 total_price += hours * Number(values.type);
             }
-            values.total_price = total_price;
+            values.total_price = total_price - total_price * (values.discount.split('%')[0] / 100);
 
             const data = [];
             // data.push({ room_id: values['room_id'] });
@@ -134,18 +139,19 @@ function RoomOrderDetail(props) {
                     } else {
                         let temp = true;
 
-                        roomIndex.data.map((item) => {
-                            if (item.id !== +roomOrderId && new Date(item.out_expected) >= new Date()) {
-                                if (
-                                    compareTime(new Date(item.in_expected), new Date(item.out_expected), values.in_expected) ||
-                                    compareTime(new Date(item.in_expected), new Date(item.out_expected), values.out_expected) ||
-                                    compareTime(new Date(values.in_expected), new Date(values.out_expected), new Date(item.in_expected)) ||
-                                    compareTime(new Date(values.in_expected), new Date(values.out_expected), new Date(item.out_expected))
-                                ) {
-                                    temp = false;
+                        roomIndex.data &&
+                            roomIndex.data.map((item) => {
+                                if (item.id !== roomOrderId && new Date(item.out_expected) >= new Date()) {
+                                    if (
+                                        compareTime(new Date(item.in_expected), new Date(item.out_expected), values.in_expected) ||
+                                        compareTime(new Date(item.in_expected), new Date(item.out_expected), values.out_expected) ||
+                                        compareTime(new Date(values.in_expected), new Date(values.out_expected), new Date(item.in_expected)) ||
+                                        compareTime(new Date(values.in_expected), new Date(values.out_expected), new Date(item.out_expected))
+                                    ) {
+                                        temp = false;
+                                    }
                                 }
-                            }
-                        });
+                            });
 
                         if (temp === true) {
                             const valuesOptimal = Object.keys(values).filter((key) => values[key] !== undefined);
@@ -182,6 +188,10 @@ function RoomOrderDetail(props) {
                     <InputField form={form} name="room_id" label="số phòng" />
                 </div>
                 <div className="room-detail-name-customer">
+                    <Typography component="h4">id Khách Hàng</Typography>
+                    <InputField disabled={true} form={form} name="customer_id" label="id khách hàng" />
+                </div>
+                <div className="room-detail-name-customer">
                     <Typography component="h4">Tên Khách Hàng</Typography>
                     <InputField form={form} name="customer" label="tên khách hàng" />
                 </div>
@@ -194,8 +204,12 @@ function RoomOrderDetail(props) {
                     <InputField form={form} name="phone_customer" label="SĐT" />
                 </div>
                 <div>
-                    <Typography component="h4">Kiểu thuê </Typography>
+                    <Typography component="h4">Giá thuê </Typography>
                     <InputField form={form} name="type" label="price/hour" />
+                </div>
+                <div>
+                    <Typography component="h4">Discount</Typography>
+                    <InputField form={form} name="discount" label="discount" />
                 </div>
 
                 <div>
@@ -229,15 +243,10 @@ function RoomOrderDetail(props) {
                             <InputField
                                 form={form}
                                 name={`add_price${item}`}
-                                defaultValues={JSON.parse(order?.additional_price)[index]?.info}
+                                defaultValues={order?.additional_price[index]?.info}
                                 placeholder="info"
                             />
-                            <InputField
-                                form={form}
-                                name={`price${item}`}
-                                placeholder="price"
-                                defaultValues={JSON.parse(order?.additional_price)[index]?.price}
-                            />
+                            <InputField form={form} name={`price${item}`} placeholder="price" defaultValues={order?.additional_price[index]?.price} />
                         </div>
                     ))}
                 </div>
@@ -245,6 +254,10 @@ function RoomOrderDetail(props) {
                 <div>
                     <Typography component="h4">Khách đặt qua kênh nào </Typography>
                     <SelectField selectList={kenhList} form={form} name="type_booking" />
+                </div>
+                <div>
+                    <Typography component="h4">đánh giá của khách </Typography>
+                    <InputField form={form} name="review_customer" label="đánh giá" />
                 </div>
 
                 <Button size="large" type="submit" className={classes.submit} variant="contained" color="primary">

@@ -2,21 +2,21 @@ import axiosClient from './axiosClient.js';
 
 const userApi = {
     getAll() {
-        const url = `/user/list`;
+        const url = `/api/users`;
         return axiosClient.get(url);
     },
-    getId(params,id) {
-        const url = `/get/user/${id}`
-        return axiosClient.get(url,  params );
+    getId(id) {
+        const url = `/api/users/${id}`
+        return axiosClient.get(url);
 
     },
     put(params, id) {
-        const url = `/user/update/${id}`;
-        return axiosClient.put(url, params );
+        const url = `/api/users/${id}`;
+        return axiosClient.patch(url, params );
     },
-    delete(params, id) {
-        const url = `/user/delete/${id}`;
-        return axiosClient.delete(url, { params });
+    delete(id) {
+        const url = `/api/users/${id}`;
+        return axiosClient.delete(url);
     },
 };
 

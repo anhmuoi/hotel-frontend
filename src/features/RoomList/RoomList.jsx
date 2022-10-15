@@ -35,20 +35,21 @@ function RoomList() {
 
         return {
             ...params,
-            page: Number.parseInt(params.page) || 1,
-            limit: Number.parseInt(params.limit) || 10,
+            _page: Number.parseInt(params._page) || 1,
+            _limit: Number.parseInt(params._limit) || 10,
         };
     }, [location.search]);
 
     const [pagination, setPagination] = useState({
         page: 1,
+        limit: 10,
         total: 10,
     });
 
     const handlePagination = (event, page) => {
         const filter = {
             ...queryParams,
-            page: page,
+            _page: page,
         };
 
         history.push({
@@ -63,12 +64,9 @@ function RoomList() {
                 const action = getRoomList(queryParams);
                 const resultAction = await dispatch(action);
 
-                setRoomList(resultAction);
                 const rs = unwrapResult(resultAction);
-                setPagination({
-                    page: rs.pagination.page,
-                    total: rs.total,
-                });
+                setRoomList(rs.data.data);
+                setPagination(rs.data.pagination);
             } catch (error) {
                 enqueueSnackbar(error.message, { variant: 'error' });
             }
@@ -83,8 +81,8 @@ function RoomList() {
             <RoomManager />
             <Pagination
                 onChange={handlePagination}
-                count={pagination.total < 10 ? 1 : Math.ceil(pagination.total / 10)}
-                page={pagination.page}
+                count={Math.ceil(pagination.total / pagination.limit)}
+                page={queryParams._page} 
                 color="primary"
             />
         </div>

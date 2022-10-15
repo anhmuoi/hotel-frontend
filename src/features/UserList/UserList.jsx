@@ -13,7 +13,7 @@ const UserList = () => {
         (async () => {
             try {
                 const data = await userApi.getAll();
-                setUserList(data.data.data);
+                setUserList(data.data);
             } catch (error) {
                 enqueueSnackbar(error.message, { variant: 'error' });
             }

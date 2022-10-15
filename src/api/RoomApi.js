@@ -2,33 +2,33 @@ import axiosClient from './axiosClient.js';
 
 const RoomApi = {
     async getAll(params) {
-        const RoomList = await axiosClient.get('/room/list', { params });
-
+        const RoomList = await axiosClient.get('/api/room', { params });
+        console.log(RoomList.data);
         return {
-            data: RoomList.data.data,
-            pagination: {
-                page: params.page,
-                limit: params.limit,
-            },
-            total: RoomList.data.total,
+            data: RoomList.data,
+            pagination: RoomList.pagination
 
         };
     },
-    getId(params, id) {
-        const url = `/get/room/${id}`;
-        return axiosClient.get(url, params);
+    getAllRoom() {
+        const url = `/api/room`;
+        return axiosClient.get(url);
+    },
+    getId(id) {
+        const url = `/api/room/${id}`;
+        return axiosClient.get(url);
     },
     create(params) {
-        const url = `/room/create`;
+        const url = `/api/room`;
         return axiosClient.post(url,  params );
     },
     put(params, id) {
-        const url = `/room/update/${id}`;
-        return axiosClient.put(url, params);
+        const url = `/api/room/${id}`;
+        return axiosClient.patch(url, params);
     },
-    delete(params, id) {
-        const url = `/room/delete/${id}`;
-        return axiosClient.delete(url, { params });
+    delete(id) {
+        const url = `/api/room/${id}`;
+        return axiosClient.delete(url);
     },
 };
 

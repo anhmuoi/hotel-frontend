@@ -34,15 +34,15 @@ function RoomDetail(props) {
     const { enqueueSnackbar } = useSnackbar();
 
     const roomList = useSelector((state) => state.room);
-    const [depreciationCount, setDepreciationCount] = React.useState([1]);
-    const [dataCount, setDataCount] = React.useState([1]);
+    // const [depreciationCount, setDepreciationCount] = React.useState([1]);
+    // const [dataCount, setDataCount] = React.useState([1]);
 
     const {
         params: { roomId },
         url,
     } = useRouteMatch();
     const history = useHistory();
-    const room = roomList.RoomList.find((room) => Number(room.id) === +roomId);
+    const room = roomList.RoomList.find((room) => room.id === roomId);
 
     if (!room) {
         history.push('/room-manager');
@@ -52,12 +52,12 @@ function RoomDetail(props) {
         name: yup.string().required('Tên phòng không được để trống'),
         fixed_price: yup.number().required('Giá phòng không được để trống'),
         investment_price: yup.number().required('Giá đầu tư không được để trống'),
-        location: yup.string().required('Vị trí phòng không được để trống'),
+        description: yup.string().required('Vị trí phòng không được để trống'),
     });
     const form = useForm({
         defaultValues: {
             name: room?.name,
-            location: room?.location,
+            description: room?.description,
             fixed_price: room?.fixed_price,
             investment_price: room?.investment_price ? JSON.parse(room?.investment_price) : ' ',
         },
@@ -66,16 +66,13 @@ function RoomDetail(props) {
 
     const handleSubmit = async (values) => {
         try {
-            const depreciation_period = [];
-            depreciationCount.map((item, index) => {
-                depreciation_period.push({ info: values[`date${index + 1}`], price: values[`price${index + 1}`] });
-                delete values[`price${index + 1}`];
-                delete values[`date${index + 1}`];
-            });
-            values.depreciation_period = depreciation_period;
-
-            values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
-
+            // const depreciation_period = [];
+            // depreciationCount.map((item, index) => {
+            //     depreciation_period.push({ info: values[`date${index + 1}`], price: values[`price${index + 1}`] });
+            //     delete values[`price${index + 1}`];
+            //     delete values[`date${index + 1}`];
+            // });
+            // values.depreciation_period = depreciation_period;
             const valuesOptimal = Object.keys(values).filter((key) => values[key] !== undefined);
             const value_obj = {};
             valuesOptimal.forEach((key) => (value_obj[key] = values[key]));
@@ -95,26 +92,7 @@ function RoomDetail(props) {
     useEffect(() => {
         if (roomList.RoomList.length === 0) {
             history.push('/room-manager');
-        }
-        if (typeof JSON.parse(room?.depreciation_period) === 'string') {
-            if (JSON.parse(JSON.parse(room?.depreciation_period))[0]?.info !== null) {
-                setDepreciationCount(() => {
-                    const newCount = [];
-                    for (let i = 0; i < JSON.parse(JSON.parse(room?.depreciation_period)).length; i++) {
-                        newCount.push(i + 1);
-                    }
-                    return newCount;
-                });
-            }
-        } else if (JSON.parse(room?.depreciation_period)[0]?.info !== null) {
-            setDepreciationCount(() => {
-                const newCount = [];
-                for (let i = 0; i < JSON.parse(room?.depreciation_period).length; i++) {
-                    newCount.push(i + 1);
-                }
-                return newCount;
-            });
-        }
+        }     
     }, []);
 
     return (
@@ -130,8 +108,8 @@ function RoomDetail(props) {
                     <InputField form={form} name="name" placeholder="name" />
                 </div>
                 <div className="room-detail-location">
-                    <Typography component="h4">Location</Typography>
-                    <InputField form={form} name="location" placeholder="location" />
+                    <Typography component="h4">Description</Typography>
+                    <InputField form={form} name="description" placeholder="description" />
                 </div>
 
                 <div className="room-detail-fix">
@@ -143,41 +121,7 @@ function RoomDetail(props) {
                     <InputField form={form} name="investment_price" placeholder="investment_price" />
                 </div>
 
-                <div className="room-detail-dep">
-                    <div className="room-detail-dep-icon">
-                        <Typography component="h4">depreciation_period</Typography>
-                        <IconButton onClick={() => setDepreciationCount([...depreciationCount, depreciationCount.length + 1])}>
-                            <AddBoxIcon />
-                        </IconButton>
-                        <IconButton onClick={() => setDepreciationCount((prev) => prev.filter((_, i) => i !== prev.length - 1))}>
-                            <RemoveIcon />
-                        </IconButton>
-                    </div>
-                    {depreciationCount.map((item, index) => (
-                        <div className="room-detail-dep-form" key={index}>
-                            <InputField
-                                form={form}
-                                defaultValues={
-                                    typeof JSON.parse(room?.depreciation_period) === 'string'
-                                        ? JSON.parse(JSON.parse(room?.depreciation_period))[index]?.info
-                                        : JSON.parse(room?.depreciation_period)[index]?.info
-                                }
-                                name={`date${item}`}
-                                placeholder="date: example: 2022/04/12 08:35:17"
-                            />
-                            <InputField
-                                form={form}
-                                defaultValues={
-                                    typeof JSON.parse(room?.depreciation_period) === 'string'
-                                        ? JSON.parse(JSON.parse(room?.depreciation_period))[index]?.price
-                                        : JSON.parse(room?.depreciation_period)[index]?.price
-                                }
-                                name={`price${item}`}
-                                placeholder="price"
-                            />
-                        </div>
-                    ))}
-                </div>
+            
 
                 <Button size="large" type="submit" className={classes.submit} fullWidth variant="contained" color="primary">
                     update

@@ -16,15 +16,14 @@ import { Pagination } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { getRoomList } from '../../features/RoomList/components/RoomCard/RoomCardSlice.js';
 import { unwrapResult } from '@reduxjs/toolkit';
-
+import LineChart from '../LineChart/index.jsx';
+import { BarChart } from '../BarChart/index.jsx';
 
 function DashBoard({ idOrderRender }) {
     const dispatch = useDispatch();
     const history = useHistory();
     const { enqueueSnackbar } = useSnackbar();
     const [roomList, setRoomList] = useState([]);
-
-
 
     const location = useLocation();
 
@@ -33,8 +32,8 @@ function DashBoard({ idOrderRender }) {
 
         return {
             ...params,
-            page: Number.parseInt(params.page) || 1,
-            limit: Number.parseInt(params.limit) || 10,
+            _page: Number.parseInt(params._page) || 1,
+            _limit: Number.parseInt(params._limit) || 10,
         };
     }, [location.search]);
     const [pagination, setPagination] = useState({
@@ -42,11 +41,11 @@ function DashBoard({ idOrderRender }) {
         total: 10,
     });
 
-    
     const handlePagination = (event, page) => {
+        console.log(page)
         const filter = {
             ...queryParams,
-            page: page,
+            _page: page,
         };
 
         history.push({
@@ -62,11 +61,8 @@ function DashBoard({ idOrderRender }) {
                 const resultAction = await dispatch(action);
 
                 const rs = unwrapResult(resultAction);
-                setRoomList(rs.data);
-                setPagination({
-                    page: rs.pagination.page,
-                    total: rs.total,
-                });
+                setRoomList(rs.data.data);
+                setPagination(rs.data.pagination);
             } catch (error) {
                 enqueueSnackbar(error.message, { variant: 'error' });
             }
@@ -78,29 +74,37 @@ function DashBoard({ idOrderRender }) {
             <div className="note">
                 <div className="note-1">
                     <div></div>
-                    <p>phòng chưa được order</p>
+                    <p>phòng trống</p>
                 </div>
 
+                <div className="note-2">
+                    <div></div>
+                    <p>phòng đã được đặt trước</p>
+                </div>
                 <div className="note-3">
                     <div></div>
-                    <p>phòng có order trước hoặc đang được sử dụng</p>
+                    <p>phòng đang được sử dụng</p>
                 </div>
             </div>
-                <p>click vào room để order</p>
-            
+            <p>click vào room để order</p>
 
             <div className="dashboard-list">
-                {roomList.length > 0 && roomList?.map((room, index) => (
-                    <RoomOrderCard idOrderList={idOrderRender} room={room} key={index}></RoomOrderCard>
-                ))}
+                {roomList?.length > 0 &&
+                    roomList?.map((room, index) => <RoomOrderCard idOrderList={idOrderRender} room={room} key={index}></RoomOrderCard>)}
             </div>
             <br />
-            <Pagination
-                onChange={handlePagination}
-                count={pagination.total < 10 ? 1 : Math.ceil(pagination.total / 10)}
-                page={pagination.page}
-                color="primary"
-            />
+            <Pagination onChange={handlePagination} count={Math.ceil(pagination.total / pagination.limit)} page={queryParams._page} color="primary" />
+
+            <br></br>
+            <br></br>
+            <br></br>
+            <br></br>
+            <LineChart />
+            <br></br>
+            <br></br>
+            <br></br>
+            <br></br>
+            <BarChart />
         </div>
     );
 }

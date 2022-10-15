@@ -4,6 +4,7 @@ import orderApi from '../../../../api/orderApi.js';
 export const getRoomOrderList = createAsyncThunk('roomOrder/getAll', async (payload) => {
     //call api
     const data = await orderApi.getAll(payload);
+    console.log(data);
 
     return data;
 });
@@ -11,7 +12,6 @@ export const getRoomOrderList = createAsyncThunk('roomOrder/getAll', async (payl
 const initialState = {
   RoomOrderList: [],
   pagination: {},
-  total: 0,
 };
 
 const RoomSlice = createSlice({
@@ -43,7 +43,7 @@ const RoomSlice = createSlice({
         [getRoomOrderList.fulfilled]: (state, action) => {
           state.RoomOrderList = action.payload.data;
           state.pagination = action.payload.pagination;
-          state.total = action.payload.total;
+          
         },
     },
 });

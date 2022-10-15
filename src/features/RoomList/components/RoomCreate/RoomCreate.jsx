@@ -32,9 +32,8 @@ const useStyles = makeStyles((theme) => ({
 
 function RoomCreate(props) {
     const { enqueueSnackbar } = useSnackbar();
-    const [depreciationCount, setDepreciationCount] = React.useState([1]);
-    const [dataCount, setDataCount] = React.useState([1]);
-
+    // const [depreciationCount, setDepreciationCount] = React.useState([1]);
+    // const [dataCount, setDataCount] = React.useState([1]);
 
     const history = useHistory();
 
@@ -42,12 +41,12 @@ function RoomCreate(props) {
         name: yup.string().required('Tên phòng không được để trống'),
         fixed_price: yup.number().required('Giá phòng không được để trống'),
         investment_price: yup.number().required('Giá đầu tư không được để trống'),
-        location: yup.string().required('Vị trí phòng không được để trống'),
+        description: yup.string().required('Vị trí phòng không được để trống'),
     });
     const form = useForm({
         defaultValues: {
             name: '',
-            location: '',
+            description: '',
             fixed_price: '',
             investment_price: '',
         },
@@ -56,16 +55,13 @@ function RoomCreate(props) {
 
     const handleSubmit = async (values) => {
         try {
-            const depreciation_period = [];
-            depreciationCount.map((item, index) => {
-                depreciation_period.push({ info: values[`date${index + 1}`], price: values[`price${index + 1}`] });
-                delete values[`price${index + 1}`];
-                delete values[`date${index + 1}`];
-            });
-            values.depreciation_period =JSON.stringify(depreciation_period);
-
-            values.data = [];
-            values.user = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
+            // const depreciation_period = [];
+            // depreciationCount.map((item, index) => {
+            //     depreciation_period.push({ info: values[`date${index + 1}`], price: values[`price${index + 1}`] });
+            //     delete values[`price${index + 1}`];
+            //     delete values[`date${index + 1}`];
+            // });
+            // values.depreciation_period =JSON.stringify(depreciation_period);
 
             const valuesOptimal = Object.keys(values).filter((key) => values[key] !== undefined);
             const value_obj = {};
@@ -102,8 +98,8 @@ function RoomCreate(props) {
                     <InputField form={form} name="name" placeholder="name" />
                 </div>
                 <div className="room-create-location">
-                    <Typography component="h4">Location</Typography>
-                    <InputField form={form} name="location" placeholder="location" />
+                    <Typography component="h4">Description</Typography>
+                    <InputField form={form} name="description" placeholder="description" />
                 </div>
 
                 <div className="room-create-fix">
@@ -113,24 +109,6 @@ function RoomCreate(props) {
                 <div className="room-create-invest">
                     <Typography component="h4">investment_price</Typography>
                     <InputField form={form} name="investment_price" placeholder="investment_price" />
-                </div>
-
-                <div className="room-create-dep">
-                    <div className="room-create-dep-icon">
-                        <Typography component="h4">depreciation_period</Typography>
-                        <IconButton onClick={() => setDepreciationCount([...depreciationCount, depreciationCount.length + 1])}>
-                            <AddBoxIcon />
-                        </IconButton>
-                        <IconButton onClick={() => setDepreciationCount((prev) => prev.filter((_, i) => i !== prev.length - 1))}>
-                            <RemoveIcon />
-                        </IconButton>
-                    </div>
-                    {depreciationCount.map((item, index) => (
-                        <div className="room-detail-dep-form" key={index}>
-                            <InputField form={form} name={`date${item}`} placeholder="date: example: 2022/04/12 08:35:17" />
-                            <InputField form={form} name={`price${item}`} placeholder="price" />
-                        </div>
-                    ))}
                 </div>
 
                 <Button size="large" type="submit" className={classes.submit} fullWidth variant="contained" color="primary">

@@ -43,6 +43,7 @@ function RoutesWrapper() {
                 <Route exact path="/room-manager" render={(props) => <Home {...props} />} />
                 <Route exact path="/dashboard" render={(props) => <Home {...props} />} />
                 <Route exact path="/order-manager" render={(props) => <Home {...props} />} />
+                <Route exact path="/info-customer" render={(props) => <Home {...props} />} />
 
                 <Route exact path={`/room-manager/create`} component={RoomCreate}></Route>
                 <Route exact path={`/room-manager/:roomId`} component={RoomDetail}></Route>

@@ -19,9 +19,6 @@ import { getRoomList } from '../RoomList/components/RoomCard/RoomCardSlice.js';
 import { getRoomOrderList } from './components/RoomOrderCard/RoomOrderSlice.js';
 import './RoomOrderList.scss';
 
-
-
-
 function RoomOrderList() {
     const dispatch = useDispatch();
     const roomList = useSelector((state) => state.room.RoomList);
@@ -37,34 +34,34 @@ function RoomOrderList() {
 
     const queryParams = useMemo(() => {
         const params = queryString.parse(location.search);
-
+        console.log(params);
         return {
             ...params,
-            page: Number.parseInt(params.page) || 1,
-            limit: Number.parseInt(params.limit) || 10,
+            _page: Number.parseInt(params._page) || 1,
+            _limit: Number.parseInt(params._limit) || 10,
         };
     }, [location.search]);
 
     const [pagination, setPagination] = useState({
         page: 1,
+        limit: 10,
         total: 10,
     });
 
-    const handleGetListRoom = async () => {
-        const action = getRoomList({ page: pagination.page });
-        const resultAction = await dispatch(action);
-        setRoomRender(unwrapResult(resultAction).data);
-
-    };
-    if (roomRender?.length === 0) {
-        handleGetListRoom();
-    }
+    // const handleGetListRoom = async () => {
+    //     const action = getRoomList({ page: pagination.page });
+    //     const resultAction = await dispatch(action);
+    //     setRoomRender(unwrapResult(resultAction).data);
+    // };
+    // if (roomRender?.length === 0) {
+    //     handleGetListRoom();
+    // }
 
     useEffect(() => {
         (async () => {
             try {
                 try {
-                    const totalPrice = await orderApi.getTotalPrice({ user: JSON.parse(localStorage.getItem(storageKeys.USER)).user });
+                    const totalPrice = await orderApi.getTotalPrice();
                     setTotalPrice(totalPrice.data.total_price);
                 } catch (error) {
                     enqueueSnackbar(error.message, { variant: 'error' });
@@ -74,7 +71,7 @@ function RoomOrderList() {
                 const resultAction = await dispatch(action);
 
                 const rs = unwrapResult(resultAction);
-                
+                console.log(rs);
 
                 // use reduce to get total price
                 const totalPriceRender = rs.data.reduce((total, item) => {
@@ -82,11 +79,7 @@ function RoomOrderList() {
                 }, 0);
                 setTotalPriceRender(totalPriceRender);
 
-
-                setPagination({
-                    page: rs.pagination.page,
-                    total: rs.total,
-                });
+                setPagination(rs.pagination);
 
                 if (roomRender.length !== 0 && rs) {
                     roomRender.map((room, index) => {
@@ -125,10 +118,10 @@ function RoomOrderList() {
     }, [roomRender, timeString === undefined, queryParams]);
 
     const handlePagination = (event, page) => {
-
+        console.log();
         const filter = {
             ...queryParams,
-            page: page,
+            _page: page,
         };
 
         history.push({
@@ -190,11 +183,16 @@ function RoomOrderList() {
                         </div>
                         <div className="order-list-current-money">
                             <p>tổng doanh thu những order trong danh sách bên dưới:&nbsp;</p>
-                            <h4 style={{fontWeight: 'bold'}}>{formatPrice(totalPriceRender)}</h4>
+                            <h4 style={{ fontWeight: 'bold' }}>{formatPrice(totalPriceRender)}</h4>
                         </div>
                     </div>
                     <OrderManager />
-                    <Pagination onChange={handlePagination} count={Math.ceil(pagination.total / 10)} page={pagination.page} color="primary" />
+                    <Pagination
+                        onChange={handlePagination}
+                        count={Math.ceil(pagination.total / pagination.limit)}
+                        page={queryParams._page}
+                        color="primary"
+                    />
                 </>
             ) : location.pathname === '/dashboard' ? (
                 <div className="order-list__list">

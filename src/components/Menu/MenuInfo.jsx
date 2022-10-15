@@ -4,12 +4,14 @@ import { useLocation } from 'react-router-dom';
 import RoomList from '../../features/RoomList/RoomList.jsx';
 import RoomOrderList from '../../features/RoomOrderList/RoomOrderList.jsx';
 import UserList from '../../features/UserList/UserList.jsx';
+import InfoCustomer from '../InfoCustomer/InfoCustomer.jsx';
 
 const tabNameToIndex = {
     0: 'user-manager',
     1: 'room-manager',
     2: 'order-manager',
     3: 'dashboard',
+    4: 'info-customer',
 };
 
 const indexToTabName = {
@@ -17,6 +19,7 @@ const indexToTabName = {
     'room-manager': 1,
     'order-manager': 2,
     dashboard: 3,
+    'info-customer': 4,
 };
 
 function MenuInfo({ propsRouter }) {
@@ -82,6 +85,7 @@ function MenuInfo({ propsRouter }) {
                     <Tab label="Quản lý phòng" {...a11yProps(1)} sx={{ margin: '10px' }} />
                     <Tab label="Quản lý đặt phòng" {...a11yProps(2)} sx={{ margin: '10px' }} />
                     <Tab label="Dashboard" {...a11yProps(3)} sx={{ margin: '10px' }} />
+                    <Tab label="Thông tin khách hàng" {...a11yProps(3)} sx={{ margin: '10px' }} />
                 </Tabs>
                 <TabPanel value={value} index={0}>
                     <UserList />
@@ -94,6 +98,9 @@ function MenuInfo({ propsRouter }) {
                 </TabPanel>
                 <TabPanel value={value} index={3}>
                     <RoomOrderList />
+                </TabPanel>
+                <TabPanel value={value} index={4}>
+                    <InfoCustomer />
                 </TabPanel>
             </Box>
         </div>

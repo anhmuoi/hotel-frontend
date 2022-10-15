@@ -20,7 +20,7 @@ import orderApi from '../../api/orderApi.js';
 import userApi from '../../api/userApi.js';
 import { useSnackbar } from 'notistack';
 
-function createData(id, name, email, phone, location, created_at, data, type) {
+function createData(id, name, email, phone, location, created_at, type) {
     return {
         id,
         name,
@@ -30,7 +30,6 @@ function createData(id, name, email, phone, location, created_at, data, type) {
             {
                 location: location,
                 created_at: created_at,
-                data: data,
                 phone: phone,
             },
         ],
@@ -44,11 +43,11 @@ function Row(props) {
     const { enqueueSnackbar } = useSnackbar();
 
     // get userId in localstorage
-    const userId = JSON.parse(localStorage.getItem(storageKeys.USER)).user;
+    const userId = JSON.parse(localStorage.getItem(storageKeys.USER)).id;
 
     const handleClickRemove = async () => {
         try {
-            const data = await userApi.delete({ user: userId }, row.id);
+            const data = await userApi.delete(userId);
             window.location.reload();
         } catch (error) {
             enqueueSnackbar(error.message, { variant: 'error' });
@@ -78,7 +77,7 @@ function Row(props) {
                 <TableCell width={200} align="center">
                     <Button
                         onClick={() => handleClickUpdate()}
-                        disabled={row.id !== userId || JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        disabled={row.id !== userId || JSON.parse(localStorage.getItem(storageKeys.USER)).type === 'user'}
                         color="success"
                         variant="outlined"
                     >
@@ -87,7 +86,7 @@ function Row(props) {
                     <Button
                         onClick={() => handleClickRemove()}
                         color="error"
-                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).data.type === 'user'}
+                        disabled={JSON.parse(localStorage.getItem(storageKeys.USER)).type === 'user'}
                         variant="outlined"
                     >
                         Remove
@@ -142,19 +141,19 @@ function Row(props) {
 export default function UserManager({ userList }) {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    // console.log(userList);
 
     const rows = [];
     for (let i = 0; i < userList?.length; i++) {
         rows.push(
             createData(
-                userList[i].id,
-                userList[i].name,
-                userList[i].email,
-                userList[i].phone,
-                userList[i].location,
-                userList[i].created_at,
-                userList[i].data,
-                userList[i].type
+                userList[i]?.id,
+                userList[i]?.name,
+                userList[i]?.email,
+                userList[i]?.phone,
+                userList[i]?.location,
+                userList[i]?.created_at || '',
+                userList[i]?.type
             )
         );
     }
